@@ -40,10 +40,16 @@ function! s:ErbLint(current_args)
   for i in qflist
      let i.type = substitute(i.type, 'E', '', '')
   endfor
+  let qflist = sort(qflist, "QflistCompare")
   call setqflist(qflist)
 
   copen
 endfunction
+
+function! QflistCompare(i1, i2)
+  let [t1, t2] = [a:i1.lnum, a:i2.lnum]
+   return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
+endfunc
 
 command! -complete=custom,s:ErblintOptions -nargs=? ErbLint :call <SID>ErbLint(<q-args>)
 "autocmd BufWritePost *.erb ErbLint
