@@ -13,8 +13,10 @@ let g:loaded_vim_erblint = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:sort_by_msg_option = '--sort-by-msg'
 " completion of options
-let s:erblint_options = ['--autocorrect', '--enable-all-linters', '--enable-linters ']
+let s:erblint_options = ['--autocorrect', '--lint-all', '--enable-all-linters', '--enable-linters ', s:sort_by_msg_option]
+
 function! s:ErblintOptions(...)
   return join(s:erblint_options, "\n")
 endfunction
@@ -22,7 +24,13 @@ endfunction
 function! s:ErbLint(current_args)
   let l:filename = @%
   let l:erblint_cmd = 'erblint'
-  let l:erblint_opts = ' ' . a:current_args
+  if match(a:current_args, s:sort_by_msg_option) == -1 
+    let l:erblint_opts = ' ' . a:current_args
+    let s:sort_by_msg = 'false'
+  else
+    let l:erblint_opts = ' ' . substitute(a:current_args, s:sort_by_msg_option, '', 'g') 
+    let s:sort_by_msg = 'true'
+  endif
 
   let l:erblint_output = system(l:erblint_cmd . l:erblint_opts . ' ' . l:filename . ' 2> /dev/null')
   if !empty(matchstr(l:erblint_opts, '--autocorrect'))
@@ -40,15 +48,29 @@ function! s:ErbLint(current_args)
   for i in qflist
      let i.type = substitute(i.type, 'E', '', '')
   endfor
+
+  " sort by filename and line number or lint message
   let qflist = sort(qflist, "QflistCompare")
   call setqflist(qflist)
-
   copen
 endfunction
 
 function! QflistCompare(i1, i2)
-  let [t1, t2] = [a:i1.lnum, a:i2.lnum]
-   return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
+  " 1'st  sort key is filename 
+  let [f1, f2] = [a:i1.bufnr, a:i2.bufnr]
+
+  " 2'nd  sort key is lint error message or line number
+  if s:sort_by_msg == 'true'
+    let [l1, l2] = [a:i1.text, a:i2.text]
+  else
+    let [l1, l2] = [a:i1.lnum, a:i2.lnum]
+  end
+
+  if f1 == f2
+    return l1 == l2 ? 0 : l1 > l2 ? 1 : -1
+  else
+    return f1 == f2 ? 0 : f1 > f2 ? 1 : -1
+  endif
 endfunc
 
 command! -complete=custom,s:ErblintOptions -nargs=? ErbLint :call <SID>ErbLint(<q-args>)
