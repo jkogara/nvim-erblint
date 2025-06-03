@@ -58,20 +58,21 @@ function M.run_erblint(args)
   vim.o.errorformat = save_errorformat
 
   local qflist = vim.fn.getqflist()
-  for _, item in ipairs(qflist) do
-    item.type = ""
-  end
-
   table.sort(qflist, qflist_compare(sort_by_msg))
 
-  local error_count = #qflist
-  if error_count == 0 then
-    fidget.notify("ErbLint: No issues found", vim.log.levels.INFO)
+  local no_errors_found = false
+  for _, item in ipairs(qflist) do
+    if item.text:find("No errors") then
+      no_errors_found = true
+      break
+    end
+  end
+
+  if no_errors_found then
+    fidget.notify("No errors found", vim.log.levels.INFO)
   else
-    fidget.notify(
-      string.format("ErbLint: Found %d issue%s", error_count, error_count == 1 and "" or "s"),
-      vim.log.levels.WARN
-    )
+    vim.cmd("copen")
+    fidget.notify("Errors found", vim.log.levels.ERROR)
   end
 end
 
