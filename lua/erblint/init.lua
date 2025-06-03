@@ -42,6 +42,7 @@ function M.run_erblint(args)
   end
 
   local fidget = require("fidget")
+  local notify = require("notify")
 
   fidget.notify("Running erblint...", vim.log.levels.INFO)
 
@@ -58,7 +59,6 @@ function M.run_erblint(args)
   vim.o.errorformat = save_errorformat
 
   local qflist = vim.fn.getqflist()
-  table.sort(qflist, qflist_compare(sort_by_msg))
 
   local no_errors_found = false
   for _, item in ipairs(qflist) do
@@ -71,8 +71,17 @@ function M.run_erblint(args)
   if no_errors_found then
     fidget.notify("No errors found", vim.log.levels.INFO)
   else
-    vim.cmd("copen")
-    fidget.notify("Errors found", vim.log.levels.ERROR)
+    local messages = {}
+    for _, item in ipairs(qflist) do
+      table.insert(messages, item.text)
+    end
+    notify(table.concat(messages, "\n"), vim.log.levels.ERROR, {
+      title = "Erblint Results",
+      timeout = 5000,
+      on_open = function()
+        vim.cmd("copen")
+      end,
+    })
   end
 end
 
