@@ -22,7 +22,11 @@ Obtain a copy of this plugin and place in your Neovim plugin directory.
       pattern = '*.erb',
       command = 'ErbLint'
     })
-  end
+  end,
+  dependencies = {
+    'j-hui/fidget.nvim',
+    'rcarriga/nvim-notify'
+  }
 }
 ```
 
