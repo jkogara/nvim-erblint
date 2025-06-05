@@ -30,21 +30,6 @@ Obtain a copy of this plugin and place in your Neovim plugin directory.
 }
 ```
 
-### Using packer.nvim
-
-```lua
-use {
-  'tkatsu/vim-erblint',
-  ft = 'eruby'
-}
-```
-
-### Using vim-plug
-
-```vim
-Plug 'tkatsu/vim-erblint'
-```
-
 ## Usage
 
 You can use the `:ErbLint` command to run erblint and display the results.

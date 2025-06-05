@@ -55,14 +55,18 @@ function M.run_erblint(args)
 
   local save_errorformat = vim.o.errorformat
   vim.o.errorformat = "%-GLinting%.%#,%ZIn\\ file:\\ %f:%l,%E%m,%-G%.%#"
-  vim.fn.setqflist({}, " ", { lines = vim.split(erblint_output, "\n") })
   vim.o.errorformat = save_errorformat
-
-  local qflist = vim.fn.getqflist()
+  local error_lines = vim.split(erblint_output, "\n")
+  -- remove any empty error_lines
+  for i = #error_lines, 1, -1 do
+    if error_lines[i] == "" then
+      table.remove(error_lines, i)
+    end
+  end
 
   local no_errors_found = false
-  for _, item in ipairs(qflist) do
-    if item.text:find("No errors") then
+  for _, item in ipairs(error_lines) do
+    if item:find("No errors") then
       no_errors_found = true
       break
     end
@@ -70,8 +74,8 @@ function M.run_erblint(args)
 
   if not no_errors_found then
     local messages = {}
-    for _, item in ipairs(qflist) do
-      table.insert(messages, item.text)
+    for _, item in ipairs(error_lines) do
+      table.insert(messages, item)
     end
     notify(table.concat(messages, "\n"), vim.log.levels.ERROR, {
       title = "Erblint Results",
